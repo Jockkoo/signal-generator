@@ -51,7 +51,7 @@ isr_mgr_init(isr_callback_t callback) {
     }
 
     // start the task that will react to events, using the default values
-    int success = xTaskCreate(task_handle_events, "handle_events", 4096, NULL, 10, &g.task_handle);
+    int success = xTaskCreate(task_handle_events, "handle_events", 4096, NULL, 3, &g.task_handle);
     if(!success) {
         goto err_queue;
     }

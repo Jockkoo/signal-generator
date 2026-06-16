@@ -1,53 +1,69 @@
 #include "rect_gen.h"
 
+#include <inttypes.h>
+
 #include "driver/ledc.h"
 #include "gen.h"
-#include "util/macros.h"
+#include "main.h"
 
-static inline bool
-verify_params(u32 freq, float duty) {
-    return freq > 0 && duty >= 0 && duty <= 1;
+static u32
+verify_params(gen_params_t *params) {
+    u32 ret = GEN_ERROR_NONE;
+    if(params->freq < 10) {
+        ret |= GEN_ERROR_FREQ;
+    }
+
+    if(params->symmetry < 0 || params->symmetry > 1) {
+        ret |= GEN_ERROR_SYMMETRY;
+    }
+
+    if(params->offset > 12 || params->offset < -12) {
+        ret |= GEN_ERROR_OFFSET;
+    }
+
+    return ret;
 }
 
-static esp_err_t
+static u32
 rect_gen_start(gen_t *base_gen, gen_params_t *params) {
-    if(!verify_params(params->freq, params->duty)) {
-        return ESP_ERR_INVALID_ARG;
+    u32 err = verify_params(params);
+    if(err) {
+        return err;
     }
 
     ledc_timer_config_t timer_conf = {
-            .speed_mode = LEDC_LOW_SPEED_MODE,
+            .speed_mode = LEDC_HIGH_SPEED_MODE,
             .timer_num = LEDC_TIMER_0,
             .duty_resolution = LEDC_TIMER_8_BIT,
             .freq_hz = params->freq,
             .clk_cfg = LEDC_AUTO_CLK,
     };
 
-    esp_err_t err = ledc_timer_config(&timer_conf);
+    err = ledc_timer_config(&timer_conf);
     if(err) {
-        return err;
+        return GEN_ERROR_UNKNOWN;
     }
 
     ledc_channel_config_t channel_conf = {
-            .speed_mode = LEDC_LOW_SPEED_MODE,
+            .speed_mode = LEDC_HIGH_SPEED_MODE,
             .channel = LEDC_CHANNEL_0,
             .timer_sel = LEDC_TIMER_0,
-            .gpio_num = 25,
-            .duty = CLAMP(params->duty * params->duty, 0, 255),
+            .gpio_num = O_SIGNAL,
+            .duty = params->symmetry * 255,
             .hpoint = 0,
     };
 
     err = ledc_channel_config(&channel_conf);
     if(err) {
-        return err;
+        return GEN_ERROR_UNKNOWN;
     }
 
-    return ESP_OK;
+    return GEN_ERROR_NONE;
 }
 
 static esp_err_t
 rect_gen_stop(gen_t *base_gen) {
-    return ledc_stop(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0);
+    return ledc_stop(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, 0);
 }
 
 static const gen_interface_t rect_gen_impl = {

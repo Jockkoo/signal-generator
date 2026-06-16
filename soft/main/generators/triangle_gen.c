@@ -1,24 +1,43 @@
 #include "triangle_gen.h"
 
-static esp_err_t
-generate_points(u8 *buffer, gen_params_t *params) {
-    if(params->freq < 10 || params->symmetry < 0 || params->symmetry > 1) {
-        return ESP_ERR_INVALID_ARG;
+static u32
+verify_params(gen_params_t *params) {
+    u32 ret = GEN_ERROR_NONE;
+    if(params->freq < 10) {
+        ret |= GEN_ERROR_FREQ;
     }
 
-    int peak_index = DAC_DMA_GEN_BUFFER_SIZE * params->symmetry;
+    if(params->symmetry < 0 || params->symmetry > 1) {
+        ret |= GEN_ERROR_SYMMETRY;
+    }
+
+    if(params->offset > 12 || params->offset < -12) {
+        ret |= GEN_ERROR_OFFSET;
+    }
+
+    return ret;
+}
+
+static u32
+generate_points(u8 *buffer, u32 count, gen_params_t *params) {
+    u32 err = verify_params(params);
+    if(err) {
+        return err;
+    }
+
+    int peak_index = count * params->symmetry;
 
     for(int i = 0; i < peak_index; i++) {
         buffer[i] = (255 * i) / peak_index;
     }
 
-    int falling_steps = DAC_DMA_GEN_BUFFER_SIZE - peak_index;
-    for(int i = peak_index; i < DAC_DMA_GEN_BUFFER_SIZE; i++) {
-        int steps_from_end = DAC_DMA_GEN_BUFFER_SIZE - 1 - i;
+    int falling_steps = count - peak_index;
+    for(int i = peak_index; i < count; i++) {
+        int steps_from_end = count - 1 - i;
         buffer[i] = (255 * steps_from_end) / falling_steps;
     }
 
-    return ESP_OK;
+    return GEN_ERROR_NONE;
 }
 
 void

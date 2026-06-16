@@ -1,18 +1,30 @@
 #include "dac_dma_gen.h"
 
+#include <inttypes.h>
+
 #include "driver/dac_continuous.h"
 #include "util/macros.h"
 
-static esp_err_t
+static inline u32
+get_points_count(u32 freq) {
+    u32 count = DAC_DMA_GEN_BUFFER_SIZE;
+
+    // we make sure that the total frequency of the dac wont we greater than 1MHz
+    while(count * freq > 2E6) {
+        count /= 2;
+    }
+
+    return count;
+}
+
+static u32
 dac_dma_gen_start(gen_t *base_gen, gen_params_t *params) {
     dac_dma_gen_t *gen = CONTAINER_OF(base_gen, dac_dma_gen_t, base_gen);
 
-    if(!gen->generate_points) {
-        return ESP_ERR_INVALID_ARG;
-    }
+    u32 count = get_points_count(params->freq);
 
     // generate the points from the impl
-    esp_err_t err = gen->generate_points(gen->buffer, params);
+    u32 err = gen->generate_points(gen->buffer, count, params);
     if(err) {
         return err;
     }
@@ -22,7 +34,7 @@ dac_dma_gen_start(gen_t *base_gen, gen_params_t *params) {
             // these are by default such, may need to change them
             .desc_num = 8,
             .buf_size = 2048,
-            .freq_hz = DAC_DMA_GEN_BUFFER_SIZE * params->freq,
+            .freq_hz = count * params->freq,
             .offset = 0,
             // TODO: try out different clock setting to get around the minimum freq
             .clk_src = DAC_DIGI_CLK_SRC_APLL,
@@ -30,23 +42,23 @@ dac_dma_gen_start(gen_t *base_gen, gen_params_t *params) {
 
     err = dac_continuous_new_channels(&conf, &gen->dac_handle);
     if(err) {
-        return err;
+        return GEN_ERROR_UNKNOWN;
     }
 
     err = dac_continuous_enable(gen->dac_handle);
     if(err) {
         dac_continuous_del_channels(gen->dac_handle);
-        return err;
+        return GEN_ERROR_UNKNOWN;
     }
 
-    err = dac_continuous_write_cyclically(gen->dac_handle, gen->buffer, DAC_DMA_GEN_BUFFER_SIZE, NULL);
+    err = dac_continuous_write_cyclically(gen->dac_handle, gen->buffer, count, NULL);
     if(err) {
         dac_continuous_disable(gen->dac_handle);
         dac_continuous_del_channels(gen->dac_handle);
-        return err;
+        return GEN_ERROR_UNKNOWN;
     }
 
-    return ESP_OK;
+    return GEN_ERROR_NONE;
 }
 
 static esp_err_t

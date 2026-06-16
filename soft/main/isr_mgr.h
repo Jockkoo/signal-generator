@@ -6,7 +6,7 @@
 #include "hal/gpio_types.h"
 #include "util/ints.h"
 
-#define ISR_MGR_EVENT_QUEUE_SIZE 16
+#define ISR_MGR_EVENT_QUEUE_SIZE 64
 
 typedef struct pin {
     int number;

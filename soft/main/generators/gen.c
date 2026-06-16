@@ -5,24 +5,26 @@
 
 void
 gen_init(gen_t *gen, const gen_interface_t *impl) {
-    gen->active = false;
     gen->impl = impl;
 }
 
-esp_err_t
+u32
 gen_start(gen_t *gen, gen_params_t *params) {
-    esp_err_t err = gen->impl->start(gen, params);
+    u32 err = gpio_reset_pin(O_SIGNAL);
     if(err) {
         return err;
     }
 
-    gen->active = true;
-    return ESP_OK;
+    err = gen->impl->start(gen, params);
+    if(err) {
+        return err;
+    }
+
+    return GEN_ERROR_NONE;
 }
 
 esp_err_t
 gen_stop(gen_t *gen) {
-    gen->active = false;
     esp_err_t err = gen->impl->stop(gen);
     if(err) {
         return err;
@@ -38,5 +40,6 @@ gen_stop(gen_t *gen) {
     if(err) {
         return err;
     }
+
     return gpio_set_level(O_SIGNAL, 0);
 }
