@@ -15,6 +15,12 @@ typedef struct gen_params {
 
 struct gen;
 
+typedef enum gen_type {
+    GEN_TYPE_SINE,
+    GEN_TYPE_RECT,
+    GEN_TYPE_TRI
+} gen_type_t;
+
 typedef enum gen_error {
     GEN_ERROR_NONE = 0,
     GEN_ERROR_FREQ = (1 << 0),

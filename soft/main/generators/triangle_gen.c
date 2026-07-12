@@ -1,29 +1,10 @@
 #include "triangle_gen.h"
 
 static u32
-verify_params(gen_params_t *params) {
-    u32 ret = GEN_ERROR_NONE;
-    if(params->freq < 10) {
-        ret |= GEN_ERROR_FREQ;
-    }
-
-    if(params->symmetry < 0 || params->symmetry > 1) {
-        ret |= GEN_ERROR_SYMMETRY;
-    }
-
-    if(params->offset > 12 || params->offset < -12) {
-        ret |= GEN_ERROR_OFFSET;
-    }
-
-    return ret;
-}
-
-static u32
 generate_points(u8 *buffer, u32 count, gen_params_t *params) {
-    u32 err = verify_params(params);
-    if(err) {
-        return err;
-    }
+    // u32 err = GEN_ERROR_NONE;
+
+    // Sklonio sam verifikaciju parametara jer se sada uvek clampuju na granicne vrednosti
 
     int peak_index = count * params->symmetry;
 
