@@ -82,13 +82,13 @@ lcd_init(const lcd_config_t *lcd_config) {
 
     // We should play around with these to minimize the delays
 
-    vTaskDelay(pdMS_TO_TICKS(20));
+    vTaskDelay(pdMS_TO_TICKS(30));
     lcd_send_nibble(0x03);
-    vTaskDelay(pdMS_TO_TICKS(5));  // wait for LCD to power up
+    vTaskDelay(pdMS_TO_TICKS(10));  // wait for LCD to power up
     lcd_send_nibble(0x03);
     ets_delay_us(150);
     lcd_send_nibble(0x03);
-    vTaskDelay(pdMS_TO_TICKS(5));
+    vTaskDelay(pdMS_TO_TICKS(10));
     lcd_send_nibble(0x02);
 
     ets_delay_us(50);
@@ -100,7 +100,7 @@ lcd_init(const lcd_config_t *lcd_config) {
     lcd_send_byte(LCD_CURSOR_INC_SHIFT_OFF, LCD_COMMAND);  // Cursor Increment, Shift off
     ets_delay_us(50);
     lcd_send_byte(LCD_CLEAR_CURSOR_HOME, LCD_COMMAND);  // Clear Display, Cursor to Home
-    vTaskDelay(pdMS_TO_TICKS(2));  // Must set FreeRtos tick rate to 1000!
+    ets_delay_us(3000);  // Must set FreeRtos tick rate to 1000!
 
     return ESP_OK;
 
@@ -111,7 +111,7 @@ err_gpio:
 void
 lcd_clear(void) {
     lcd_send_byte(LCD_CLEAR_CURSOR_HOME, LCD_COMMAND);
-    vTaskDelay(pdMS_TO_TICKS(2));
+    ets_delay_us(3000);
 }
 
 void

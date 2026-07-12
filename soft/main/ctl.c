@@ -54,7 +54,9 @@ ctl_enable(ctl_signal_type_t type, gen_params_t *params) {
 
     ESP_LOGI(tag, "starting %s generator with parametars - freq: %" PRIi32 ", symmetry: %.2f, offset: %0.2f",
             ctl_signal_type_to_string[type], params->freq, params->symmetry, params->offset);
-    params->symmetry = 0.5;
+    if (type == CTL_SIGNAL_TYPE_SINE) {
+        params->symmetry = 0.5;
+    }
     u32 err = gen_start(gen, params);
     if(err) {
         ESP_LOGI(tag, "generator error: %" PRIu32, err);

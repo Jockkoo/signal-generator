@@ -1,0 +1,15 @@
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - --target=xtensa-esp32-elf
+  Remove:
+    - -mlongcalls
+    - -mtext-section-literals
+    - -mfix-esp32*
+    - -fno-tree-switch-conversion
+    - -fno-malloc-dce
+    - -fstrict-volatile-bitfields
+    - -fno-shrink-wrap
+    - -fzero-init-padding-bits=all
+Diagnostics:
+  Suppress: "*"
